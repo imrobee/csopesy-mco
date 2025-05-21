@@ -1,20 +1,71 @@
-// csopesy-mco.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
-
 #include <iostream>
+#include <string>
+#include <cstdlib>
 
-int main()
-{
-    std::cout << "Hello World!\n";
+void printHeader() {
+    std::cout << "  _____   _____   ____   _____   ______   _____ __     __\n";
+    std::cout << " / ____| / ____| / __ \\ |  __ \\ |  ____| / ____|\\ \\   / /\n";
+    std::cout << "| |     | (___  | |  | || |__) || |__   | (___   \\ \\_/ / \n";
+    std::cout << "| |      \\___ \\ | |  | ||  ___/ |  __|   \\___ \\   \\   /  \n";
+    std::cout << "| |____  ____) || |__| || |     | |____  ____) |   | |   \n";
+    std::cout << " \\_____||_____/  \\____/ |_|     |______||_____/    |_|   \n";
+    std::cout << "                                                        \n";
+    std::cout << "________________________________________________________\n";
+    std::cout << "\n";
+    std::cout << "Welcome to CSOPESY Emulator!\n";
+    std::cout << "\n";
+    std::cout << "Developers:\n";
+    std::cout << "Clemente, Daniel Gavrie \n";
+    std::cout << "Feliciano, Jan Robee \n";
+    std::cout << "Mangawang, Felix Melford\n";
+    std::cout << "Roque, Dominic Angelo\n";
+    std::cout << "\n";
+    std::cout << "Type 'exit' to quit, 'clear' to clear the screen\n";
 }
 
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
+void clearScreen() {
+    system("cls");
+    printHeader();
+}
 
-// Tips for Getting Started: 
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file
+void enterMainLoop() {
+    std::string command;
+    printHeader();
+
+    while (true) {
+        std::cout << "Enter a command: ";
+        std::getline(std::cin, command);
+
+        if (command == "initialize") {
+            std::cout << "initialize command recognized. Doing something.\n";
+        }
+        else if (command == "screen") {
+            std::cout << "screen command recognized. Doing something.\n";
+        }
+        else if (command == "scheduler-test") {
+            std::cout << "scheduler-test command recognized. Doing something.\n";
+        }
+        else if (command == "scheduler-stop") {
+            std::cout << "scheduler-stop command recognized. Doing something.\n";
+        }
+        else if (command == "report-util") {
+            std::cout << "report-util command recognized. Doing something.\n";
+        }
+        else if (command == "clear") {
+            clearScreen();
+        }
+        else if (command == "exit") {
+            std::cout << "exit command recognized. Closing application.\n";
+            break;
+        }
+        else {
+            std::cout << "Unrecognized command.\n";
+        }
+    }
+}
+
+int main() {
+    enterMainLoop();
+
+    return 0;
+}
