@@ -70,6 +70,7 @@ void drawScreen(const Screen& screen) {
         std::getline(std::cin, input);
         if (input == "exit") {
             clearScreen();
+            printHeader();
             return;
         }
         else {
@@ -80,10 +81,10 @@ void drawScreen(const Screen& screen) {
 
 void enterMainLoop() {
     std::string command;
-    //printHeader();
+    printHeader();
 
     while (true) {
-        printHeader();
+        //printHeader();
         std::cout << "Enter a command: ";
         std::getline(std::cin, command);
 
