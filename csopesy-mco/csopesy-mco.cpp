@@ -53,7 +53,7 @@ void printHeader() {
 
 void clearScreen() {
     system("cls");
-    printHeader();
+    //printHeader();
 }
 
 void drawScreen(const Screen& screen) {
