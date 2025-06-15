@@ -1,36 +1,13 @@
 #include <iostream>
+#include <fstream>
 #include <string>
-#include <cstdlib>
-#include <map>
-#include <ctime>
-#include <iomanip>
 #include <sstream>
+#include <thread>
+#include <chrono>
+#include <vector>
+#include "Scheduler.h"
 
-// Struct to represent a screen
-struct Screen {
-    std::string name;
-    int currentLine = 0;
-    int totalLines = 100; //Temp
-    std::string timestamp;
-};
-
-// Map to store screen sessions
-std::map<std::string, Screen> screens;
-
-std::string getCurrentTimestamp() {
-    auto now = std::time(nullptr);
-    std::tm localTime;
-
-#ifdef _WIN32
-    localtime_s(&localTime, &now); // Windows secure version
-#else
-    localtime_r(&now, &localTime); // POSIX (Linux/macOS)
-#endif
-
-    std::ostringstream oss;
-    oss << std::put_time(&localTime, "%m/%d/%Y, %I:%M:%S %p");
-    return oss.str();
-}
+Scheduler scheduler;
 
 void printHeader() {
     std::cout << "  _____   _____   ____   _____   ______   _____ __     __\n";
@@ -53,30 +30,7 @@ void printHeader() {
 
 void clearScreen() {
     system("cls");
-    //printHeader();
-}
-
-void drawScreen(const Screen& screen) {
-    clearScreen();
-    std::cout << "=== SCREEN: " << screen.name << " ===\n";
-    std::cout << "Process Name: " << screen.name << "\n";
-    std::cout << "Instruction: " << screen.currentLine << " / " << screen.totalLines << "\n";
-    std::cout << "Created At: " << screen.timestamp << "\n\n";
-    std::cout << "Type 'exit' to return to main menu.\n";
-
-    std::string input;
-    while (true) {
-        std::cout << screen.name << " > ";
-        std::getline(std::cin, input);
-        if (input == "exit") {
-            clearScreen();
-            printHeader();
-            return;
-        }
-        else {
-            std::cout << "Unrecognized command inside screen. Type 'exit' to return.\n";
-        }
-    }
+    printHeader();
 }
 
 void enterMainLoop() {
@@ -84,54 +38,51 @@ void enterMainLoop() {
     printHeader();
 
     while (true) {
-        //printHeader();
         std::cout << "Enter a command: ";
         std::getline(std::cin, command);
 
         if (command == "initialize") {
-            std::cout << "initialize command recognized. Doing something.\n";
+			std::cout << "Initialize command recognized. Configuring OS Emulator...\n";
+            scheduler.initialize("config.txt");
         }
-        else if (command == "screen") {
-            std::cout << "screen command recognized. Doing something.\n";
+        else if (command == "screen" || command.rfind("screen -s ", 0) == 0) {
+            std::cout << "Screen command recognized. Doing something.\n";
         }
         else if (command == "scheduler-test") {
-            std::cout << "scheduler-test command recognized. Doing something.\n";
+            std::cout << "Scheduler-test command recognized. Doing something.\n";
         }
         else if (command == "scheduler-stop") {
-            std::cout << "scheduler-stop command recognized. Doing something.\n";
+			std::cout << "Scheduler-stop command recognized. Doing something.\n";
         }
         else if (command == "report-util") {
-            std::cout << "report-util command recognized. Doing something.\n";
+            std::cout << "Report-util command recognized.Generating report...\n";
+        }
+        else if (command == "screen -ls") {
+            scheduler.printStatus();
+        }
+        else if (command.rfind("screen -r ", 0) == 0) {
+            std::string name = command.substr(10);
+			std::ifstream log(name + ".txt"); // Update when processes shouldnt generate .txt files anymore
+			if (log.is_open()) { 
+                std::cout << "Process name: " << name << "\nLogs:\n";
+                std::string line;
+                while (std::getline(log, line)) {
+                    std::cout << line << "\n";
+                }
+                log.close(); 
+            }
+            else {
+                std::cout << "Process " << name << " not found.\n"; // Should not be able to see processes that don't exist/are not finished
+            }
         }
         else if (command == "clear") {
             clearScreen();
         }
-        else if (command.rfind("screen -s ", 0) == 0) {
-            std::string name = command.substr(10);
-            if (screens.find(name) == screens.end()) {
-                Screen newScreen;
-                newScreen.name = name;
-                newScreen.timestamp = getCurrentTimestamp();
-                screens[name] = newScreen;
-                drawScreen(screens[name]);
-            }
-            else {
-                std::cout << "Screen with name '" << name << "' already exists.\n";
-            }
-        }
-        else if (command.rfind("screen -r ", 0) == 0) {
-            std::string name = command.substr(10);
-            if (screens.find(name) != screens.end()) {
-                drawScreen(screens[name]);
-            }
-            else {
-                std::cout << "No screen found with name '" << name << "'.\n";
-            }
-        }
         else if (command == "exit") {
-            std::cout << "exit command recognized. Closing application.\n";
+            std::cout << "Exit command recognized. Closing application.\n";
             break;
         }
+        
         else {
             std::cout << "Unrecognized command.\n";
         }
