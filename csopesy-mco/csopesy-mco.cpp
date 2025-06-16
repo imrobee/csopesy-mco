@@ -41,48 +41,50 @@ void enterMainLoop() {
         std::cout << "Enter a command: ";
         std::getline(std::cin, command);
 
-        if (command == "initialize") {
+        if (command == "initialize") { // Initialize the processor configuration of the application with config.txt
 			std::cout << "Initialize command recognized. Configuring OS Emulator...\n";
             scheduler.initialize("config.txt");
         }
-        else if (command == "screen" || command.rfind("screen -s ", 0) == 0) {
+        else if (command == "screen") {
             std::cout << "Screen command recognized. Doing something.\n";
         }
-        else if (command == "scheduler-test") {
-            std::cout << "Scheduler-test command recognized. Doing something.\n";
+		else if (command.rfind("screen -s ", 0) == 0) { // Starts a process with the given name
+            std::cout << "Screen command recognized. Doing something.\n";
         }
-        else if (command == "scheduler-stop") {
-			std::cout << "Scheduler-stop command recognized. Doing something.\n";
-        }
-        else if (command == "report-util") {
-            std::cout << "Report-util command recognized.Generating report...\n";
-        }
-        else if (command == "screen -ls") {
-            scheduler.printStatus();
-        }
-        else if (command.rfind("screen -r ", 0) == 0) {
+        else if (command.rfind("screen -r ", 0) == 0) { // Accesses the process screen anytime
             std::string name = command.substr(10);
-			std::ifstream log(name + ".txt"); // Update when processes shouldnt generate .txt files anymore
-			if (log.is_open()) { 
+            std::ifstream log(name + ".txt"); // Update when processes shouldnt generate .txt files anymore
+            if (log.is_open()) {
                 std::cout << "Process name: " << name << "\nLogs:\n";
                 std::string line;
                 while (std::getline(log, line)) {
                     std::cout << line << "\n";
                 }
-                log.close(); 
+                log.close();
             }
             else {
                 std::cout << "Process " << name << " not found.\n"; // Should not be able to see processes that don't exist/are not finished
             }
         }
-        else if (command == "clear") {
+		else if (command == "screen -ls") { // Lists all processes
+            scheduler.printStatus();
+        }
+		else if (command == "scheduler-start") { // Every X CPU ticks, a new process is created and put into ready queue for CPU scheduler. The freq is set in config.txt
+            std::cout << "Scheduler-start command recognized. Doing something.\n";
+        }
+		else if (command == "scheduler-stop") { // Stops the scheduler from creating new processes
+			std::cout << "Scheduler-stop command recognized. Doing something.\n";
+        }
+        else if (command == "report-util") { // Saves "screen -ls" in csopesy-log.txt
+            std::cout << "Report-util command recognized.Generating report...\n";
+        }
+        else if (command == "clear") { // Clears the screen
             clearScreen();
         }
-        else if (command == "exit") {
+		else if (command == "exit") { // Exits the application
             std::cout << "Exit command recognized. Closing application.\n";
             break;
         }
-        
         else {
             std::cout << "Unrecognized command.\n";
         }

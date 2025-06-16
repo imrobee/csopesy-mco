@@ -29,7 +29,7 @@ void Scheduler::initialize(const std::string& configPath) {
         }
     }
 
-    // Create dummy processes
+    // Create dummy processes (Only for FCFS HW, # of processes should be determined in config.txt)
     for (int i = 1; i <= 10; ++i) {
         std::ostringstream name;
         name << "Process_" << std::setw(2) << std::setfill('0') << i;
