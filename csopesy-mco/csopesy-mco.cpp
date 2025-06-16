@@ -83,6 +83,7 @@ void enterMainLoop() {
         }
 		else if (command == "exit") { // Exits the application
             std::cout << "Exit command recognized. Closing application.\n";
+            scheduler.shutdown();
             break;
         }
         else {

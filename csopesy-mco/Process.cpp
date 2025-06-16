@@ -12,7 +12,18 @@ Process::Process(const std::string& name, int totalLines)
 
 void Process::run(int coreId) {
     assignedCore = coreId;
-    std::ofstream log(name + ".txt", std::ios::app);
+    std::ofstream log(name + ".txt", std::ios::out);
+
+    // Printing Function
+    // Header
+    if (log.is_open()) {
+        log << "Process name: " << name << "\n";
+        log << "Logs:\n\n";
+    }
+
+    log.close();
+    log.open(name + ".txt", std::ios::app); // append the actual logs
+
 
     while (currentLine < totalLines) {
         std::this_thread::sleep_for(std::chrono::milliseconds(10)); // simulate work

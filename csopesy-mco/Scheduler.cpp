@@ -70,7 +70,7 @@ void Scheduler::coreWorker(int coreId) {
                 return !jobQueue.empty() || !running;
                 });
 
-            if (!running) return;
+            if (!running) break;
 
             if (!jobQueue.empty() && coreAvailable[coreId]) {
                 proc = jobQueue.front();
@@ -118,4 +118,20 @@ void Scheduler::printStatus() {
     }
 
     std::cout << "________________________________________________________\n";
+}
+
+void Scheduler::shutdown() {
+    {
+        std::lock_guard<std::mutex> lock(queueMutex);
+        running = false;
+    }
+    cv.notify_all();  // Wake up all waiting threads
+
+    for (auto& thread : cores) {
+        if (thread.joinable()) {
+            thread.join();  // Wait for worker thread to finish
+        }
+    }
+
+    cores.clear();
 }

@@ -19,6 +19,7 @@ public:
     void initialize(const std::string& configPath);
     void start();
     void printStatus();
+    void shutdown();
 
 private:
     int numCores;
