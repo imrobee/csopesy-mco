@@ -1,36 +1,13 @@
 #include <iostream>
+#include <fstream>
 #include <string>
-#include <cstdlib>
-#include <map>
-#include <ctime>
-#include <iomanip>
 #include <sstream>
+#include <thread>
+#include <chrono>
+#include <vector>
+#include "Scheduler.h"
 
-// Struct to represent a screen
-struct Screen {
-    std::string name;
-    int currentLine = 0;
-    int totalLines = 100; //Temp
-    std::string timestamp;
-};
-
-// Map to store screen sessions
-std::map<std::string, Screen> screens;
-
-std::string getCurrentTimestamp() {
-    auto now = std::time(nullptr);
-    std::tm localTime;
-
-#ifdef _WIN32
-    localtime_s(&localTime, &now); // Windows secure version
-#else
-    localtime_r(&now, &localTime); // POSIX (Linux/macOS)
-#endif
-
-    std::ostringstream oss;
-    oss << std::put_time(&localTime, "%m/%d/%Y, %I:%M:%S %p");
-    return oss.str();
-}
+Scheduler scheduler;
 
 void printHeader() {
     std::cout << "  _____   _____   ____   _____   ______   _____ __     __\n";
@@ -53,87 +30,111 @@ void printHeader() {
 
 void clearScreen() {
     system("cls");
-    //printHeader();
+    printHeader();
 }
 
-void drawScreen(const Screen& screen) {
-    clearScreen();
-    std::cout << "=== SCREEN: " << screen.name << " ===\n";
-    std::cout << "Process Name: " << screen.name << "\n";
-    std::cout << "Instruction: " << screen.currentLine << " / " << screen.totalLines << "\n";
-    std::cout << "Created At: " << screen.timestamp << "\n\n";
-    std::cout << "Type 'exit' to return to main menu.\n";
 
-    std::string input;
-    while (true) {
-        std::cout << screen.name << " > ";
-        std::getline(std::cin, input);
-        if (input == "exit") {
-            clearScreen();
-            printHeader();
-            return;
+void initializeEmulator() {
+    // Initialize the processor configuration of the application with config.txt
+    std::cout << "Initialize command recognized. Configuring OS Emulator...\n";
+    scheduler.initialize("config.txt");
+}
+
+void startScheduler() {
+    // Generates processes and inserts them into ready queue
+    std::cout << "Scheduler-start command recognized. Starting scheduler...\n";
+    scheduler.start();
+}
+
+void stopScheduler() {
+    // Stops the scheduler from creating new processes
+    std::cout << "Scheduler-stop command recognized. Stopping process generation...\n";
+    scheduler.stop();
+}
+
+void readProcess(std::string command) {
+    std::string name = command.substr(10);
+    std::ifstream log(name + ".txt"); // Update when processes shouldnt generate .txt files anymore
+    if (log.is_open()) {
+        std::cout << "Process name: " << name << "\nLogs:\n";
+        std::string line;
+        while (std::getline(log, line)) {
+            std::cout << line << "\n";
         }
-        else {
-            std::cout << "Unrecognized command inside screen. Type 'exit' to return.\n";
-        }
+        log.close();
     }
-}
+    else {
+        std::cout << "Process " << name << " not found.\n"; // Should not be able to see processes that don't exist/are not finished
+    }
+}                  
 
+//A main menu console for recognizing the following commands : 
+//“initialize” – initialize the processor configuration of the application. This must be called before any other command could be recognized, aside from “exit”.
+//“exit” – terminates the console.
+//“screen” – note: does not support "screen" by itself, only the following commands:
+//          “screen -s <process name>" - clears the screen and creates a new process with the given name.
+//                      “process-smi” – Prints a simple information about the process (lines 9 – 13). The process contains dummy instructions that the CPU executes in the background. Whenever the user types “process-smi”, it provides the updated details and accompanying logs from the print instructions. (e.g., lines 162 – 170). If the process has finished, simply print “Finished!” after the process name, ID, and logs have been printed (e.g., lines 17 – 20).
+//                      “exit” – Returns the user to the main menu.
+//  	    “screen -r <process name>” – clears the screen then accesses the process with the given name. Does not support process-smi
+// 			“screen -ls” – lists all processes that are currently running. 
+//“scheduler - start”(formerly scheduler - test) – continuously generates a batch of dummy processes for the CPU scheduler. Each process is accessible via the “screen” command.
+//“scheduler - stop” – stops generating dummy processes.
+//“report - util” – for generating CPU utilization report.See additional details.
+
+//BIG NOTE: User should only see the header in the main menu (i.e., not in screen -s).
 void enterMainLoop() {
     std::string command;
     printHeader();
+	bool initialized = false;
 
     while (true) {
-        //printHeader();
         std::cout << "Enter a command: ";
         std::getline(std::cin, command);
-
-        if (command == "initialize") {
-            std::cout << "initialize command recognized. Doing something.\n";
-        }
-        else if (command == "screen") {
-            std::cout << "screen command recognized. Doing something.\n";
-        }
-        else if (command == "scheduler-test") {
-            std::cout << "scheduler-test command recognized. Doing something.\n";
-        }
-        else if (command == "scheduler-stop") {
-            std::cout << "scheduler-stop command recognized. Doing something.\n";
-        }
-        else if (command == "report-util") {
-            std::cout << "report-util command recognized. Doing something.\n";
-        }
-        else if (command == "clear") {
-            clearScreen();
-        }
-        else if (command.rfind("screen -s ", 0) == 0) {
-            std::string name = command.substr(10);
-            if (screens.find(name) == screens.end()) {
-                Screen newScreen;
-                newScreen.name = name;
-                newScreen.timestamp = getCurrentTimestamp();
-                screens[name] = newScreen;
-                drawScreen(screens[name]);
+        
+		// if not initialized, only allow "initialize" and "exit"
+        if (!initialized) {
+            if (command == "initialize") {
+                initializeEmulator();
+                initialized = true;
+            } else if (command == "exit") {
+                std::cout << "Exit command recognized. Closing application.\n";
+                break;
+            } else {
+                std::cout << "Please initialize the emulator first by typing 'initialize'.\n";
             }
-            else {
-                std::cout << "Screen with name '" << name << "' already exists.\n";
-            }
-        }
-        else if (command.rfind("screen -r ", 0) == 0) {
-            std::string name = command.substr(10);
-            if (screens.find(name) != screens.end()) {
-                drawScreen(screens[name]);
-            }
-            else {
-                std::cout << "No screen found with name '" << name << "'.\n";
-            }
-        }
-        else if (command == "exit") {
-            std::cout << "exit command recognized. Closing application.\n";
-            break;
-        }
+		}
         else {
-            std::cout << "Unrecognized command.\n";
+            if (command == "initialize") {
+                initializeEmulator();
+            }
+            else if (command == "exit") {
+                std::cout << "Exit command recognized. Closing application.\n";
+                break;
+            }
+            else if (command.rfind("screen -s ", 0) == 0) { // "Start Process"
+				// Note: this function should clear the screen and not print the header
+            }
+            else if (command.rfind("screen -r ", 0) == 0) { // "Read Process"
+				readProcess(command);
+            }
+            else if (command == "screen -ls") { // "List all processes"
+                scheduler.printStatus();
+            }
+            else if (command == "scheduler-start") { 
+                startScheduler();
+            }
+            else if (command == "scheduler-stop") {
+                stopScheduler();
+            }
+            else if (command == "report-util") { // Saves "screen -ls" in csopesy-log.txt
+                scheduler.writeStatusToFile();
+            }
+            else if (command == "clear") { // Clears the screen
+                clearScreen();
+            }
+            else {
+                std::cout << "Unrecognized command.\n";
+			}
         }
     }
 }
